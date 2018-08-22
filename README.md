@@ -22,3 +22,14 @@ testing has not been completed in those environments.
 - <sup>3</sup>`Velodyne high definition 3D LIDARs`: http://www.velodynelidar.com/lidar/lidar.aspx
 
 
+Connection of the Garmin GPS, step to follow if the Garmin GPS has a 4800 baud rate: 
+	-Change the GPS baud rate manually : set 9600 (instead of 4800 set by default): 
+		- Download https://www8.garmin.com/support/download_details.jsp?id=925
+		- config -> switch in garmin mode
+		- set baud rate at 9600
+		- config -> switch in NMEA mode
+		- set baud rate at 9600
+	-Change the GPS baud rate permanently :
+		- Download https://www8.garmin.com/support/download_details.jsp?id=4055#Instruct
+
+
