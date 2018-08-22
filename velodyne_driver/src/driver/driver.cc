@@ -210,7 +210,17 @@ bool VelodyneDriver::poll(void)
 
   // publish message using time of last packet read
   ROS_DEBUG("Publishing a full Velodyne scan.");
-  scan->header.stamp = scan->packets.back().stamp;
+
+#define LAST 1
+#define FIRST LAST ? 0 : 1
+
+  if (LAST){
+      scan->header.stamp = scan->packets.back().stamp;
+  }
+  else if(FIRST) {
+      scan->header.stamp = scan->packets.front().stamp;
+  }
+
   scan->header.frame_id = config_.frame_id;
   output_.publish(scan);
 

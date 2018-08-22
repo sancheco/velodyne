@@ -114,7 +114,7 @@ namespace velodyne_driver
   /** @brief Get one velodyne packet. */
   int InputSocket::getPacket(velodyne_msgs::VelodynePacket *pkt, const double time_offset)
   {
-    double time1 = ros::Time::now().toSec();
+    int time1 = ros::Time::now().sec;
 
     struct pollfd fds[1];
     fds[0].fd = sockfd_;
@@ -201,9 +201,32 @@ namespace velodyne_driver
 
     // Average the times at which we begin and end reading.  Use that to
     // estimate when the scan occurred. Add the time offset.
-    double time2 = ros::Time::now().toSec();
-    pkt->stamp = ros::Time((time2 + time1) / 2.0 + time_offset);
+    int time2 = ros::Time::now().sec;
 
+//TODO
+    //for(int i =0;i<sizeof(pkt->data);i++){
+    //ROS_ERROR("%x",pkt->data[i]);
+    //}
+    //ROS_ERROR("%x\t%x\t%x\t%x",pkt->data[sizeof(pkt->data)-6],pkt->data[sizeof(pkt->data)-5], pkt->data[sizeof(pkt->data)-4],pkt->data[sizeof(pkt->data)-3]);
+    //ROS_ERROR("%x\t%x",pkt->data[sizeof(pkt->data)-2],pkt->data[sizeof(pkt->data)-1]);
+    //ROS_ERROR("%f",((pkt->data[sizeof(pkt->data)-3] << 24) + (pkt->data[sizeof(pkt->data)-4] << 16) + (pkt->data[sizeof(pkt->data)-5] << 8) + pkt->data[sizeof(pkt->data)-6])/1000000.);
+
+    //ROS_ERROR("%d.%d",(pkt->data[sizeof(pkt->data)-4] << 4) + ((pkt->data[sizeof(pkt->data)-5]&& 0xF0)>>4),((pkt->data[sizeof(pkt->data)-5]&& 0x0F) << 16)+(pkt->data[sizeof(pkt->data)-6] << 8) + pkt->data[sizeof(pkt->data)-7]);
+    //ROS_ERROR("tatatatatatatatata");
+    //ros::waitForShutdown();
+    // We take only the current hour in ros time and we add the seconds ellapsed given by the velodyne
+    ros::Time timestamp = ros::Time(((pkt->data[sizeof(pkt->data)-3] << 24) + (pkt->data[sizeof(pkt->data)-4] << 16) + (pkt->data[sizeof(pkt->data)-5] << 8) + pkt->data[sizeof(pkt->data)-6])/1000000.+ time_offset);
+    ROS_ERROR("%d%9d",timestamp.sec,timestamp.nsec);
+    if(time1/3600==time2/3600){
+        timestamp.sec = timestamp.sec + time1/3600*3600;
+    }else {
+        if(timestamp.nsec>1800){
+            timestamp.sec = timestamp.sec + time1/3600*3600;
+        }else {
+            timestamp.sec = timestamp.sec + time2/3600*3600;
+        }
+    }
+    pkt->stamp = timestamp;
     return 0;
   }
 
@@ -287,7 +310,10 @@ namespace velodyne_driver
               packet_rate_.sleep();
             
             memcpy(&pkt->data[0], pkt_data+42, packet_size);
-            pkt->stamp = ros::Time::now(); // time_offset not considered here, as no synchronization required
+
+            //Not tested yet
+            pkt->stamp = ros::Time(header->ts.tv_sec,header->ts.tv_usec*1000);//time_offset not considered here, as no synchronization required
+
             empty_ = false;
             return 0;                   // success
           }
